@@ -3,6 +3,8 @@ const express = require('express'),
     app = express(),
     PORT = process.env.PORT || 3000,
     mysql = require('mysql'),
+    path = require('path'),
+    favicon = require('serve-favicon'),
     pool = mysql.createPool({
         connectionLimit: 10,
         host: process.env.DB_HOST,
@@ -13,18 +15,23 @@ const express = require('express'),
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(favicon(path.join(__dirname, 'favicon.ico')))
+app.use('/',  express.static(path.join(__dirname, 'client')));
 
-app.get('/', (req, res) => {
-    pool.query(`SELECT * FROM ${req.body.table} WHERE id = ${req.body.id};`, function (error, results, fields) {
+app.get('/getWorld', (req, res) => {
+    const SQLIdentifiers = pool.escapeId(req.body.table),
+        userInput = pool.escape(req.body.id);
+    let data = pool.query(`SELECT * FROM city WHERE id = 1;`, function (error, results) {
         if (error) throw error;
-        res.send(results);
+        return results;
     });
+    res.send(data);
 });
 
 app.post('/', (req, res) => {
-    pool.query(`INSERT into ${req.body.table} (${req.body.column}) VALUES ("${req.body.updates}");`, (error, results, fields) => {
+    pool.query(`INSERT into ${req.body.table} (${req.body.column}) VALUES ("${req.body.updates}");`, (error, results) => {
         if (error) throw error;
-        res.send(results);
+        res.send(`database updated with ${results}`);
     });
 });
 
@@ -43,4 +50,4 @@ app.delete('/', (req, res) => {
     });
 });
 
-app.listen(PORT, () => console.log(`App is listening on port PORT!`));
+app.listen(PORT, () => console.log(`App is listening on port ${PORT}!`));
