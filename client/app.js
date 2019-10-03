@@ -1,4 +1,4 @@
-window.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded and parsed');
 
     fetch('http://localhost:3000/getWorld')

@@ -1,31 +1,40 @@
 require('dotenv').config()
 const express = require('express'),
     app = express(),
-    PORT = process.env.PORT || 3000,
+    PORT = process.env.PORT || 3001,
     mysql = require('mysql'),
     path = require('path'),
     favicon = require('serve-favicon'),
-    pool = mysql.createPool({
-        connectionLimit: 10,
+    connection = mysql.createConnection({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASS,
         database: 'world'
     });
 
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(favicon(path.join(__dirname, 'favicon.ico')))
-app.use('/',  express.static(path.join(__dirname, 'client')));
+app.use(favicon(path.join(__dirname, 'favicon.ico')));
+
+app.get('/getCity/:id', (req, res) => {
+    let singleElement = connection.escape(req.params.id);
+    connection.query(`SELECT * from city where id = ${singleElement}`, (error, rows) => {
+        if (error) throw error;
+        res.send(rows);
+    })
+})
 
 app.get('/getWorld', (req, res) => {
-    const SQLIdentifiers = pool.escapeId(req.body.table),
-        userInput = pool.escape(req.body.id);
-    let data = pool.query(`SELECT * FROM city WHERE id = 1;`, function (error, results) {
+    // const userInput = connection.escape(req.body.id);
+    connection.query(`SELECT * FROM city;`, (error, rows) => {
         if (error) throw error;
-        return results;
+        res.send(rows);
     });
-    res.send(data);
 });
 
 app.post('/', (req, res) => {
@@ -50,4 +59,4 @@ app.delete('/', (req, res) => {
     });
 });
 
-app.listen(PORT, () => console.log(`App is listening on port ${PORT}!`));
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
